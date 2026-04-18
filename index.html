@@ -3,47 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rota Bar BH 2026 - Completo</title>
+    <title>Rota Bar BH 2026</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         #map { height: 100vh; width: 100vw; }
         #infobox {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: white; padding: 20px; border-radius: 20px 20px 0 0;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.2); display: none; z-index: 1000;
+            background: white; padding: 25px; border-radius: 25px 25px 0 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.3); display: none; z-index: 2000;
         }
         .btn-rota {
             background: #e72929; color: white; border: none; padding: 15px;
             border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px;
         }
+        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 25px; cursor: pointer; color: #bbb; }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <div id="infobox">
+        <span class="close-btn" onclick="fecharBox()">×</span>
         <h2 id="bar-nome"></h2>
-        <p id="bar-prato" style="color: #e72929; font-weight: bold;"></p>
+        <p id="bar-prato" style="color: #e72929; font-weight: bold; margin: 5px 0;"></p>
         <p id="bar-end" style="font-size: 13px; color: #666;"></p>
-        <button class="btn-rota" onclick="abrirGPS()">TRAÇAR ROTA NO GOOGLE MAPS</button>
+        <button class="btn-rota" onclick="abrirGPS()">TRAÇAR ROTA NO MAPS</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // LISTA DE BARES 2026 (Exemplo de estrutura para os 128 bares)
         const baresBH = [
-            { nome: "222", prato: "Cumbuca de Carne de Sol 2026", end: "R. Francisco Deslandes, 222, Cruzeiro", lat: -19.94578, lng: -43.92848 },
-            { nome: "Alexandre's Bar", prato: "Petisco Alexandre 2026", end: "R. David Alves do Vale, 68, Santa Rosa", lat: -19.86312, lng: -43.95462 },
-            { nome: "Andrade's Beer", prato: "Sabor Mineiro 2026", end: "R. Dona Geni, 32, Maria Helena", lat: -19.79634, lng: -44.00456 },
-            { nome: "Mamute Bar", prato: "Petisco Mamute 2026", end: "Rua Paracatu, 1099, Santo Agostinho", lat: -19.9287, lng: -43.9482 },
-            { nome: "Café Palhares", prato: "KAOL Especial 2026", end: "Rua dos Tupinambás, 638, Centro", lat: -19.9172, lng: -43.9378 }
-            // Adicione os restantes bares conforme a lista PDF/TXT enviada anteriormente
+            { nome: "222", prato: "Cumbuca de Carne de Sol", end: "Rua Francisco Deslandes, 222, Cruzeiro", lat: -19.94578, lng: -43.92848 },
+            { nome: "Alexandre's Bar", prato: "Chora Canelinha", end: "Rua David Alves do Vale, 68, Santa Rosa", lat: -19.86312, lng: -43.95462 },
+            { nome: "Andrade's Beer", prato: "Ossadinha Atolada", end: "Rua Dona Geni, 32, Maria Helena", lat: -19.79634, lng: -44.00456 },
+            { nome: "Armazém Santa Amélia", prato: "Chucrute de Mineiro", end: "Avenida da Sinfonia, 253, Santa Amélia", lat: -19.85123, lng: -43.98741 },
+            { nome: "Bar da Gisa", prato: "Ajoelhou tem que rezar", end: "Rua Maria Ferreira da Silva, 367, Fernão Dias", lat: -19.8845, lng: -43.9142 },
+            { nome: "Café Palhares", prato: "Picadim 2026", end: "Rua dos Tupinambás, 638, Centro", lat: -19.9172, lng: -43.9378 },
+            { nome: "Iracema Bar", prato: "Moela ao molho com peixinho", end: "Rua Almandina, 56, Santa Tereza", lat: -19.9158, lng: -43.9125 },
+            { nome: "Bar do Magrelo", prato: "Tira-gosto do Magrelo", end: "Rua São Felipe, 21, Horto", lat: -19.9197, lng: -43.9168 },
+            { nome: "Bar do Momô", prato: "Petisco Tradicional 26", end: "Av. Coronel José Benjamim, 777, Padre Eustáquio", lat: -19.9121, lng: -43.9785 },
+            { nome: "Leo da Quadra", prato: "Di Juei", end: "Rua Oliveira Lisboa, 107, Barreiro", lat: -19.9754, lng: -44.0125 }
+            // IMPORTANTE: COPIE OS OUTROS 117 BARES DO ARQUIVO TXT E COLE AQUI
         ];
 
-        const map = L.map('map', { zoomControl: false }).setView([-19.9322, -43.9378], 12);
+        const map = L.map('map', { zoomControl: false }).setView([-19.9322, -43.9378], 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // CONFIGURAÇÃO DO ÍCONE COM TRATAMENTO DE ERRO
         const rotaIcon = L.icon({
             iconUrl: 'Rota-Logo4.jpg', 
             iconSize: [40, 40],
@@ -53,24 +58,18 @@
         let enderecoAtual = "";
 
         baresBH.forEach(bar => {
-            // Se a imagem falhar, o Leaflet pode não mostrar o marcador. 
-            // Adicionamos o marcador e capturamos cliques.
             const marker = L.marker([bar.lat, bar.lng], { icon: rotaIcon }).addTo(map);
-            
             marker.on('click', () => {
                 document.getElementById("bar-nome").innerText = bar.nome;
-                document.getElementById("bar-prato").innerText = "Prato: " + bar.prato;
-                document.getElementById("bar-end").innerText = "Endereço: " + bar.end;
+                document.getElementById("bar-prato").innerText = "🍽️ " + bar.prato;
+                document.getElementById("bar-end").innerText = "📍 " + bar.end;
                 document.getElementById("infobox").style.display = "block";
                 enderecoAtual = bar.end + ", Belo Horizonte, MG";
             });
         });
 
-        map.on('click', () => { document.getElementById("infobox").style.display = "none"; });
-
-        function abrirGPS() {
-            if (enderecoAtual) window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(enderecoAtual), '_blank');
-        }
+        function fecharBox() { document.getElementById("infobox").style.display = "none"; }
+        function abrirGPS() { window.open("https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(enderecoAtual), '_blank'); }
     </script>
 </body>
 </html>
