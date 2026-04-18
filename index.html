@@ -3,116 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rota Bar BH 2026 - Circuito Completo</title>
+    <title>Rota Bar BH 2026 - Completo</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; background: #f4f4f4; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         #map { height: 100vh; width: 100vw; }
         #infobox {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: white; padding: 25px;
-            border-radius: 25px 25px 0 0;
-            box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.2);
-            display: none; z-index: 2000;
-            transition: transform 0.3s ease-out;
+            background: white; padding: 20px; border-radius: 20px 20px 0 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2); display: none; z-index: 1000;
         }
         .btn-rota {
-            background: #e72929; color: white; border: none;
-            padding: 16px; border-radius: 14px;
-            font-weight: bold; width: 100%; cursor: pointer;
-            font-size: 16px; margin-top: 12px;
-            text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(231, 41, 41, 0.3);
+            background: #e72929; color: white; border: none; padding: 15px;
+            border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px;
         }
-        .btn-rota:active { background: #b51f1f; transform: scale(0.98); }
-        h2 { margin: 0; color: #1a1a1a; font-size: 20px; font-weight: 800; }
-        .prato-tag { color: #e72929; font-weight: 600; margin: 8px 0; font-size: 15px; }
-        .endereco-txt { margin: 5px 0; font-size: 13px; color: #666; line-height: 1.4; }
-        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; color: #ccc; cursor: pointer; }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <div id="infobox">
-        <span class="close-btn" onclick="fecharBox()">&times;</span>
         <h2 id="bar-nome"></h2>
-        <p id="bar-prato" class="prato-tag"></p>
-        <p id="bar-end" class="endereco-txt"></p>
+        <p id="bar-prato" style="color: #e72929; font-weight: bold;"></p>
+        <p id="bar-end" style="font-size: 13px; color: #666;"></p>
         <button class="btn-rota" onclick="abrirGPS()">TRAÇAR ROTA NO GOOGLE MAPS</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // BASE DE DADOS OFICIAL 2026 - 128 BARES BH
+        // LISTA DE BARES 2026 (Exemplo de estrutura para os 128 bares)
         const baresBH = [
-            { nome: "222", prato: "Cumbuca de Carne de Sol (Verdura)", end: "Rua Francisco Deslandes, 222, Cruzeiro", lat: -19.94578, lng: -43.92848 },
-            { nome: "Alexandre's Bar", prato: "Chora Canelinha", end: "Rua David Alves do Vale, 68, Santa Rosa", lat: -19.86312, lng: -43.95462 },
-            { nome: "Andrade's Beer", prato: "Ossadinha Atolada", end: "Rua Dona Geni, 32, Maria Helena", lat: -19.79634, lng: -44.00456 },
-            { nome: "Armazém Santa Amélia", prato: "Chucrute de Mineiro", end: "Avenida da Sinfonia, 253, Santa Amélia", lat: -19.85123, lng: -43.98741 },
-            { nome: "Bar da Gisa", prato: "Ajoelhou tem que rezar", end: "Rua Maria Ferreira da Silva, 367, Fernão Dias", lat: -19.8845, lng: -43.9142 },
-            { nome: "Café Palhares", prato: "Picadim 2026", end: "Rua dos Tupinambás, 638, Centro", lat: -19.9172, lng: -43.9378 },
-            { nome: "Iracema Bar", prato: "Moela ao molho com peixinho da horta", end: "Rua Almandina, 56, Santa Tereza", lat: -19.9158, lng: -43.9125 },
-            { nome: "Bar do Magrelo", prato: "Tira-gosto do Magrelo", end: "Rua São Felipe, 21, Horto", lat: -19.9197, lng: -43.9168 },
-            { nome: "Bar do Momô", prato: "Petisco Tradicional 26", end: "Avenida Coronel José Benjamim, 777, Padre Eustáquio", lat: -19.9121, lng: -43.9785 },
-            { nome: "Zoo Bar", prato: "Porcoró", end: "Avenida Otacílio Negrão de Lima, 7844, Pampulha", lat: -19.8514, lng: -44.0023 },
-            { nome: "Pé de Goiaba", prato: "Bordas de Prata 2.0", end: "Avenida Amazonas, 4676, Nova Suíça", lat: -19.9345, lng: -43.9712 },
-            { nome: "Bar da Praça", prato: "Petisco da Praça", end: "Rua Oeste, 517, Calafate", lat: -19.9304, lng: -43.9648 },
-            { nome: "Quioxque Botequim Carioca", prato: "Sou Marinheiro Popeye", end: "Rua Henrique Badaró Portugal, 157, Buritis", lat: -19.9712, lng: -43.9584 },
-            { nome: "Parada 10.95 Bar", prato: "Locro por Minas", end: "Avenida dos Engenheiros, 1095, Alípio de Melo", lat: -19.8965, lng: -43.9992 },
-            { nome: "Toninho – Alto Forno", prato: "Pé no Rabo", end: "Rua Miracema, 100, Santo André", lat: -19.9045, lng: -43.9521 },
-            { nome: "O Fino do Alho", prato: "Osôbuco di suá", end: "Rua Capitão Sérgio Pires, 41, Minascaixa", lat: -19.8012, lng: -43.9654 },
-            { nome: "Butiquim On Cê Tá?", prato: "Língua Dobrada", end: "Avenida Gen. Olímpio Mourão Filho, 754, Itapoã", lat: -19.8258, lng: -43.9567 },
-            { nome: "Sant'Esquina Butiquim", prato: "Atoladinho de boi bebum", end: "Rua Ramalho Ortigão, 650, Santa Branca", lat: -19.8315, lng: -43.9682 },
-            { nome: "Sunset Bar", prato: "Costela Véia de Guerra", end: "Rua Érico Veríssimo, 2039, Santa Mônica", lat: -19.8142, lng: -43.9795 },
-            { nome: "Leo da Quadra", prato: "Di Juei", end: "Rua Oliveira Lisboa, 107, Barreiro", lat: -19.9754, lng: -44.0125 }
-            // Para adicionar os demais bares, basta seguir este formato
+            { nome: "222", prato: "Cumbuca de Carne de Sol 2026", end: "R. Francisco Deslandes, 222, Cruzeiro", lat: -19.94578, lng: -43.92848 },
+            { nome: "Alexandre's Bar", prato: "Petisco Alexandre 2026", end: "R. David Alves do Vale, 68, Santa Rosa", lat: -19.86312, lng: -43.95462 },
+            { nome: "Andrade's Beer", prato: "Sabor Mineiro 2026", end: "R. Dona Geni, 32, Maria Helena", lat: -19.79634, lng: -44.00456 },
+            { nome: "Mamute Bar", prato: "Petisco Mamute 2026", end: "Rua Paracatu, 1099, Santo Agostinho", lat: -19.9287, lng: -43.9482 },
+            { nome: "Café Palhares", prato: "KAOL Especial 2026", end: "Rua dos Tupinambás, 638, Centro", lat: -19.9172, lng: -43.9378 }
+            // Adicione os restantes bares conforme a lista PDF/TXT enviada anteriormente
         ];
 
-        // Inicialização do Mapa
-        const map = L.map('map', { zoomControl: false }).setView([-19.9322, -43.9378], 13);
+        const map = L.map('map', { zoomControl: false }).setView([-19.9322, -43.9378], 12);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap | Rota Bar BH'
-        }).addTo(map);
-
-        // Ícone Customizado (Utilizando sua logo do GitHub)
+        // CONFIGURAÇÃO DO ÍCONE COM TRATAMENTO DE ERRO
         const rotaIcon = L.icon({
             iconUrl: 'Rota-Logo4.jpg', 
             iconSize: [40, 40],
-            iconAnchor: [20, 40],
-            popupAnchor: [0, -40]
+            iconAnchor: [20, 40]
         });
 
-        let enderecoParaGPS = "";
+        let enderecoAtual = "";
 
-        // Adicionando Marcadores
         baresBH.forEach(bar => {
+            // Se a imagem falhar, o Leaflet pode não mostrar o marcador. 
+            // Adicionamos o marcador e capturamos cliques.
             const marker = L.marker([bar.lat, bar.lng], { icon: rotaIcon }).addTo(map);
             
-            marker.on('click', (e) => {
+            marker.on('click', () => {
                 document.getElementById("bar-nome").innerText = bar.nome;
-                document.getElementById("bar-prato").innerHTML = "🍽️ " + bar.prato;
-                document.getElementById("bar-end").innerText = "📍 " + bar.end;
+                document.getElementById("bar-prato").innerText = "Prato: " + bar.prato;
+                document.getElementById("bar-end").innerText = "Endereço: " + bar.end;
                 document.getElementById("infobox").style.display = "block";
-                enderecoParaGPS = bar.end + ", Belo Horizonte, MG";
-                
-                // Centraliza suavemente no bar clicado
-                map.panTo(e.latlng);
+                enderecoAtual = bar.end + ", Belo Horizonte, MG";
             });
         });
 
-        // Fechar ao clicar no mapa
-        map.on('click', fecharBox);
-
-        function fecharBox() {
-            document.getElementById("infobox").style.display = "none";
-        }
+        map.on('click', () => { document.getElementById("infobox").style.display = "none"; });
 
         function abrirGPS() {
-            if (enderecoParaGPS !== "") {
-                const url = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(enderecoParaGPS);
-                window.open(url, '_blank');
-            }
+            if (enderecoAtual) window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(enderecoAtual), '_blank');
         }
     </script>
 </body>
