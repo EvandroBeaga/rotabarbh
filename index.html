@@ -1,93 +1,76 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rota Bar BH - Comida di Buteco 2025</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        #map {
-            height: 100vh;
-            width: 100vw;
-        }
-
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        #map { height: 100vh; width: 100vw; }
         #infobox {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            padding: 20px;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; padding: 20px;
             border-radius: 20px 20px 0 0;
             box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
-            display: none;
-            z-index: 1000;
+            display: none; z-index: 1000;
         }
-
         .btn-rota {
-            background: #e72929;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-weight: bold;
-            width: 100%;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
+            background: #e72929; color: white; border: none;
+            padding: 15px; border-radius: 12px;
+            font-weight: bold; width: 100%; cursor: pointer;
+            font-size: 16px; margin-top: 10px;
         }
-
-        h2 {
-            margin: 0;
-            color: #2c3e50;
-            font-size: 18px;
-        }
-
-        p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #555;
-        }
+        h2 { margin: 0; color: #2c3e50; font-size: 18px; }
+        p { margin: 5px 0; font-size: 14px; color: #555; }
     </style>
 </head>
-
 <body>
+
     <div id="map"></div>
+
     <div id="infobox">
         <h2 id="bar-nome"></h2>
         <p id="bar-prato"></p>
         <p id="bar-end" style="font-size: 12px; color: #888;"></p>
-        <button class="btn-rota" onclick="abrirGPS()">TRAÇAR ROTA</button>
+        <button class="btn-rota" onclick="abrirGPS()">TRAÇAR ROTA NO MAPS</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="dados_bares.js"></script>
     <script>
+        // LISTA DE BARES (Mantenha aqui para evitar erro 404 de arquivo externo)
+        const baresBH = [
+            { nome: "222", lat: -19.94578, lng: -43.92848, prato: "Cumbuca de Carne de Sol", end: "R. Francisco Deslandes, 222" },
+            { nome: "Alexandre's Bar", lat: -19.86312, lng: -43.95462, prato: "Petisco do Alexandre", end: "R. David Alves do Vale, 68" },
+            { nome: "Andrade's Beer", lat: -19.79634, lng: -44.00456, prato: "Sabor Mineiro", end: "R. Dona Geni, 32" },
+            { nome: "Armazém Santa Amélia", lat: -19.85123, lng: -43.98741, prato: "Costelinha Embriagada", end: "Rua da Sinfonia, 253" },
+            { nome: "Bar do Magrelo", lat: -19.92312, lng: -43.92345, prato: "Canela Suada", end: "Rua São Felipe, 21" }
+            // Quando tiver os outros 122, é só colar aqui dentro!
+        ];
+
+        // Inicializa o mapa centralizado em BH
         const map = L.map('map', { zoomControl: false }).setView([-19.9322, -43.9378], 13);
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap'
+            attribution: '© OpenStreetMap'
         }).addTo(map);
 
+        // Ícone personalizado (usando o link direto para evitar erro de arquivo local)
         const rotaIcon = L.icon({
-            iconUrl: 'https://i.ibb.co/Lhb8mCj/Rota-Logo4.jpg',
-            iconSize: [35, 35],
-            iconAnchor: [17, 35],
-            popupAnchor: [0, -35]
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
         });
 
         let enderecoAtual = "";
 
-        // Carrega os bares do arquivo externo
+        // Criar os marcadores no mapa
         baresBH.forEach(bar => {
             const marker = L.marker([bar.lat, bar.lng], { icon: rotaIcon }).addTo(map);
+            
             marker.on('click', () => {
                 document.getElementById("bar-nome").innerText = bar.nome;
                 document.getElementById("bar-prato").innerHTML = "<b>Prato:</b> " + bar.prato;
@@ -97,12 +80,18 @@
             });
         });
 
-        map.on('click', () => { document.getElementById("infobox").style.display = "none"; });
+        // Fechar caixa ao clicar no mapa
+        map.on('click', () => { 
+            document.getElementById("infobox").style.display = "none"; 
+        });
 
+        // Função para abrir o GPS corrigida
         function abrirGPS() {
-            window.open("https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(enderecoAtual));
+            if (enderecoAtual !== "") {
+                const url = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(enderecoAtual);
+                window.open(url, '_blank');
+            }
         }
     </script>
 </body>
-
 </html>
