@@ -12,6 +12,7 @@
             padding: 0;
             font-family: 'Segoe UI', sans-serif;
             overflow: hidden;
+            background: #f0f0f0;
         }
 
         #map {
@@ -19,6 +20,52 @@
             width: 100vw;
         }
 
+        /* Barra de Busca */
+        #search-container {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            z-index: 3000;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 30px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            font-size: 16px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        #results-list {
+            background: white;
+            border-radius: 15px;
+            margin-top: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            padding: 0;
+            list-style: none;
+        }
+
+        #results-list li {
+            padding: 12px 20px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #results-list li:hover {
+            background: #f9f9f9;
+        }
+
+        /* Info Box */
         #infobox {
             position: fixed;
             bottom: 0;
@@ -27,7 +74,7 @@
             background: white;
             padding: 25px;
             border-radius: 25px 25px 0 0;
-            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.3);
             display: none;
             z-index: 2000;
         }
@@ -42,40 +89,51 @@
             font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
+            font-size: 16px;
         }
 
         .close-btn {
             position: absolute;
             top: 10px;
             right: 20px;
-            font-size: 25px;
+            font-size: 30px;
             cursor: pointer;
-            color: #bbb;
+            color: #ccc;
         }
     </style>
 </head>
 
 <body>
+
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="Buscar bar, rua ou região (ex: Savassi)...">
+        <ul id="results-list"></ul>
+    </div>
+
     <div id="map"></div>
+
     <div id="infobox">
         <span class="close-btn" onclick="fecharBox()">×</span>
         <h2 id="bar-nome"></h2>
-        <p id="bar-prato" style="color: #e72929; font-weight: bold; margin: 5px 0;"></p>
-        <p id="bar-end" style="font-size: 13px; color: #666;"></p>
+        <p id="bar-prato" style="color: #e72929; font-weight: bold; margin: 8px 0;"></p>
+        <p id="bar-end" style="font-size: 14px; color: #666; line-height: 1.4;"></p>
         <button class="btn-rota" onclick="abrirGPS()">TRAÇAR ROTA NO MAPS</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // Mantenha sua lista completa de bares aqui (Use a que você já tem no VS Code)
+
+        // ... cole aqui sua lista de 127 bares ...
         const baresBH = [
-            { nome: "222", prato: "Cumbuca de Carne de Sol", end: "Rua Francisco Deslandes, 222, Cruzeiro", lat: -19.94578, lng: -43.92848 },
-            { nome: "Alexandre's Bar", prato: "Chora Canelinha", end: "Rua David Alves do Vale, 68, Santa Rosa", lat: -19.86312, lng: -43.95462 },
-            { nome: "Andrade's Beer", prato: "Ossadinha Atolada", end: "Rua Dona Geni, 32, Maria Helena", lat: -19.79634, lng: -44.00456 },
-            { nome: "Armazém Santa Amélia", prato: "Chucrute de Mineiro", end: "Avenida da Sinfonia, 253, Santa Amélia", lat: -19.85123, lng: -43.98741 },
+            { nome: "222", prato: "Cumbuca de Carne de Sol", end: "Rua Francisco Deslandes, 222, Cruzeiro", lat: -19.945454590349048, lng: -43.92969931859032 },
+            { nome: "Alexandre's Bar", prato: "Chora Canelinha", end: "Rua David Alves do Vale, 68, Santa Rosa", lat: 19.861595962516258, lng: -43.944369005098984 },
+            { nome: "Andrade's Beer", prato: "Ossadinha Atolada", end: "Rua Dona Geni, 32, Maria Helena", lat: -19.800389712998964, lng: -43.99651757626595 },
+            { nome: "Armazém Santa Amélia", prato: "Chucrute de Mineiro", end: "Avenida da Sinfonia, 253, Santa Amélia", lat: -19.8325981141921, lng: -43.97325987711552 },
             { nome: "Bar da Gisa", prato: "Ajoelhou tem que rezar", end: "Rua Maria Ferreira da Silva, 367, Fernão Dias", lat: -19.8845, lng: -43.9142 },
             { nome: "Café Palhares", prato: "Picadim 2026", end: "Rua dos Tupinambás, 638, Centro", lat: -19.9172, lng: -43.9378 },
             { nome: "Iracema Bar", prato: "Moela ao molho", end: "Rua Almandina, 56, Santa Tereza", lat: -19.9158, lng: -43.9125 },
-            { nome: "Bar do Magrelo", prato: "Tira-gosto do Magrelo", end: "Rua São Felipe, 21, Horto", lat: -19.9197, lng: -43.9168 },
+            { nome: "Bar do Magrelo", prato: "Tira-gosto do Magrelo", end: "Rua São Felipe, 21, Horto", lat: -19.907354850854436, lng: -43.91803305767053 },
             { nome: "Bar do Momô", prato: "Petisco Tradicional 26", end: "Av. Coronel José Benjamim, 777, Padre Eustáquio", lat: -19.9121, lng: -43.9785 },
             { nome: "Zoo Bar", prato: "Porcoró", end: "Av. Otacílio Negrão de Lima, 7844", lat: -19.8514, lng: -44.0023 },
             { nome: "Pé de Goiaba", prato: "Bordas de Prata", end: "Av. Amazonas, 4676", lat: -19.9345, lng: -43.9712 },
@@ -104,7 +162,7 @@
             { nome: "Bar do Cláudio - O Rei do Omelete", prato: "Omelete de Carne de Sol", end: "Rua Elói Mendes, 400, Santa Efigênia", lat: -19.92550, lng: -43.91890 },
             { nome: "Bar do Dodô", prato: "Fígado com Jiló Tradicional", end: "Rua Santo Elias, 39, Santa Tereza", lat: -19.91720, lng: -43.91560 },
             { nome: "Bar do Jão", prato: "Combinado do Jão", end: "Rua São João Evangelista, 150, São Pedro", lat: -19.95410, lng: -43.91820 },
-            { nome: "Bar da Lora", prato: "Pé de Porco no Mercado", end: "Mercado Central, Centro", lat: -19.92290, lng: -43.93410 },
+            { nome: "Bar da Lora", prato: "Pé de Porco no Mercado", end: "Mercado Central, Centro", lat: -19.922834241303665, lng: -43.94314634344961 },
             { nome: "Buteco do Maranhão", prato: "Carne de Lata com Mandioca", end: "Rua Erê, 150, Prado", lat: -19.92980, lng: -43.96120 },
             { nome: "Cantina da Ana", prato: "Bolinho de Arroz com Carne Seca", end: "Av. Silviano Brandão, 1200, Sagrada Família", lat: -19.91230, lng: -43.90120 },
             { nome: "Espetinho.com", prato: "Mineirinho Gratinado", end: "Rua Eli Seabra Filho, 510, Buritis", lat: -19.97300, lng: -43.95900 },
@@ -188,33 +246,82 @@
             { nome: "Botequim Carioca", prato: "Coxinha de Carne Seca com Abóbora", end: "Rua Sergipe, 800, Savassi", lat: -19.93700, lng: -43.93400 },
             { nome: "Bar da Vila", prato: "Isca de Frango com Molho de Pimenta", end: "Rua Pernambuco, 800, Savassi", lat: -19.93800, lng: -43.93500 },
             { nome: "Recanto do Sol", prato: "Caldo de Feijão com Bacon e Linguiça", end: "Rua Alagoas, 800, Savassi", lat: -19.93900, lng: -43.93600 }
-            // Adicione os outros da lista PDF aqui seguindo o mesmo padrão
+
         ];
 
         const map = L.map('map', { zoomControl: false }).setView([-19.9322, -43.9378], 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
         const rotaIcon = L.icon({
-            iconUrl: 'Rota-Logo4.jpg',
-            iconSize: [40, 40],
-            iconAnchor: [20, 40]
+            iconUrl: 'Rota-Logo4.png', // Mudei de .jpg para .png aqui!
+            iconSize: [42, 42],
+            iconAnchor: [21, 42],
+            popupAnchor: [0, -40]
         });
 
         let enderecoAtual = "";
+        const markers = {}; // Objeto para guardar os marcadores e acessá-los via busca
 
-        baresBH.forEach(bar => {
-            const marker = L.marker([bar.lat, bar.lng], { icon: rotaIcon }).addTo(map);
-            marker.on('click', () => {
-                document.getElementById("bar-nome").innerText = bar.nome;
-                document.getElementById("bar-prato").innerText = "🍽️ " + bar.prato;
-                document.getElementById("bar-end").innerText = "📍 " + bar.end;
-                document.getElementById("infobox").style.display = "block";
-                enderecoAtual = bar.end + ", Belo Horizonte, MG";
-            });
+        // Renderiza marcadores
+        baresBH.forEach((bar, index) => {
+            if (bar.lat && bar.lng) {
+                const marker = L.marker([bar.lat, bar.lng], { icon: rotaIcon }).addTo(map);
+                markers[index] = marker; // Salva o marcador
+
+                marker.on('click', () => exibirBar(bar, marker));
+            }
+        });
+
+        function exibirBar(bar, marker) {
+            document.getElementById("bar-nome").innerText = bar.nome;
+            document.getElementById("bar-prato").innerText = "🍽️ " + bar.prato;
+            document.getElementById("bar-end").innerText = "📍 " + bar.end;
+            document.getElementById("infobox").style.display = "block";
+            enderecoAtual = bar.end + ", Belo Horizonte, MG";
+            map.setView(marker.getLatLng(), 16);
+            fecharBusca();
+        }
+
+        // Lógica da Busca
+        const searchInput = document.getElementById('search-input');
+        const resultsList = document.getElementById('results-list');
+
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            resultsList.innerHTML = '';
+
+            if (term.length < 2) {
+                resultsList.style.display = 'none';
+                return;
+            }
+
+            const filtered = baresBH.filter(bar =>
+                bar.nome.toLowerCase().includes(term) ||
+                bar.end.toLowerCase().includes(term)
+            );
+
+            if (filtered.length > 0) {
+                resultsList.style.display = 'block';
+                filtered.forEach(bar => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<strong>${bar.nome}</strong><br><small>${bar.end}</small>`;
+                    li.onclick = () => {
+                        const index = baresBH.indexOf(bar);
+                        exibirBar(bar, markers[index]);
+                        searchInput.value = bar.nome;
+                    };
+                    resultsList.appendChild(li);
+                });
+            } else {
+                resultsList.style.display = 'none';
+            }
         });
 
         function fecharBox() { document.getElementById("infobox").style.display = "none"; }
-        function abrirGPS() { window.open("https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(enderecoAtual), '_blank'); }
+        function fecharBusca() { resultsList.style.display = 'none'; }
+        function abrirGPS() { window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(enderecoAtual), '_blank'); }
+
+        map.on('click', () => { fecharBox(); fecharBusca(); });
     </script>
 </body>
 
