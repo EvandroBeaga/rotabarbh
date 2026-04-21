@@ -7,107 +7,251 @@
     <title>Rota Bar BH 2026</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+        :root {
+            --vermelho-rota: #e63946;
+            --azul-rota: #1d3557;
+            --branco: #ffffff;
+            --gelo: #f8f9fa;
+        }
+
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', sans-serif;
-            overflow: hidden;
-            background: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--gelo);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
-        #map {
-            height: 100vh;
-            width: 100vw;
-            z-index: 1;
+        /* Header e Logo */
+        .main-header {
+            background-color: var(--azul-rota);
+            color: var(--branco);
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 5px solid var(--vermelho-rota);
         }
 
-        #search-container {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            z-index: 3000;
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .site-logo {
+            height: 70px;
+            filter: drop-shadow(2px 2px 5px rgba(0, 0, 0, 0.5));
+        }
+
+        .brand-text h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+
+        .brand-text .highlight {
+            color: var(--vermelho-rota);
+        }
+
+        .brand-text p {
+            margin: 0;
+            font-size: 0.8rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+
+        /* Container de Busca no Topo */
+        .search-container {
+            background: var(--azul-rota);
+            padding: 0 10px 25px 10px;
+            display: flex;
+            justify-content: center;
+            position: relative;
+            z-index: 1001;
+        }
+
+        #search-wrapper {
+            position: relative;
+            width: 90%;
             max-width: 500px;
-            margin: auto;
         }
 
         #search-input {
             width: 100%;
-            padding: 15px 20px;
-            border-radius: 30px;
+            padding: 12px 20px;
+            border-radius: 25px;
             border: none;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             font-size: 16px;
             outline: none;
-            box-sizing: border-box;
         }
 
+        /* Lista de resultados da busca */
         #results-list {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            right: 0;
             background: white;
-            border-radius: 15px;
-            margin-top: 5px;
-            max-height: 250px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            max-height: 300px;
             overflow-y: auto;
             display: none;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            padding: 0;
-            list-style: none;
+            z-index: 1002;
         }
 
         #results-list li {
-            padding: 12px 20px;
+            padding: 12px 15px;
             border-bottom: 1px solid #eee;
             cursor: pointer;
-            font-size: 14px;
             color: #333;
         }
 
         #results-list li:hover {
-            background: #f9f9f9;
+            background: #f0f0f0;
         }
 
+        /* Mapa - Ajustado para ocupar espaço entre header e footer */
+        #map {
+            flex-grow: 1;
+            height: 500px;
+            /* Altura mínima */
+            width: 100%;
+            z-index: 1;
+        }
+
+        /* Info Box (Balão do Bar) */
         #infobox {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
             background: white;
-            padding: 25px;
-            border-radius: 25px 25px 0 0;
-            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
             display: none;
             z-index: 2000;
         }
 
-        .btn-rota {
-            background: #e72929;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            width: 100%;
-            font-weight: bold;
+        .close-btn {
+            float: right;
             cursor: pointer;
-            margin-top: 10px;
-            font-size: 16px;
+            font-size: 24px;
+            line-height: 20px;
         }
 
-        .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            font-size: 30px;
+        .btn-rota {
+            width: 100%;
+            background: var(--vermelho-rota);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 10px;
             cursor: pointer;
+        }
+
+        /* Footer */
+        .main-footer {
+            background-color: #111;
             color: #ccc;
+            padding: 40px 20px;
+            text-align: left;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .footer-box h3 {
+            color: white;
+            border-left: 4px solid var(--vermelho-rota);
+            padding-left: 10px;
+            margin-top: 0;
+        }
+
+        .whatsapp-btn {
+            display: inline-block;
+            background-color: #25d366;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.8rem;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+
+        /* Estilo da Logo no Rodapé */
+        .footer-logo-container {
+            display: flex;
+            justify-content: flex-end;
+            /* Alinha no canto direito */
+            align-items: center;
+        }
+
+        .footer-logo {
+            height: 100px;
+            /* Tamanho de destaque */
+            width: auto;
+            border-radius: 10px;
+            filter: drop-shadow(0px 0px 5px rgba(255, 255, 255, 0.2));
+            transition: transform 0.3s;
+        }
+
+        .footer-logo:hover {
+            transform: scale(1.1);
+        }
+
+        /* Ajuste para celular */
+        @media (max-width: 600px) {
+            .footer-logo-container {
+                justify-content: center;
+                margin-top: 20px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <div id="search-container">
-        <input type="text" id="search-input" placeholder="Buscar bar, rua ou região...">
-        <ul id="results-list"></ul>
+    <header class="main-header">
+        <div class="header-container">
+            <img src="Rota-Logo4.png" alt="Rota Bar BH" class="site-logo">
+            <div class="brand-text">
+                <h1>ROTA BAR <span class="highlight">BH</span></h1>
+                <p>O Guia Oficial do Boteco Mineiro</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="search-container">
+        <div id="search-wrapper">
+            <input type="text" id="search-input" placeholder="🔍 Buscar bar, rua ou região...">
+            <ul id="results-list"></ul>
+        </div>
     </div>
 
     <div id="map"></div>
@@ -115,10 +259,32 @@
     <div id="infobox">
         <span class="close-btn" onclick="fecharBox()">×</span>
         <h2 id="bar-nome" style="margin: 0; font-size: 20px;"></h2>
-        <p id="bar-prato" style="color: #e72929; font-weight: bold; margin: 8px 0;"></p>
+        <p id="bar-prato" style="color: #e63946; font-weight: bold; margin: 8px 0;"></p>
         <p id="bar-end" style="font-size: 14px; color: #666; line-height: 1.4; margin-bottom: 10px;"></p>
         <button class="btn-rota" onclick="abrirGPS()">TRAÇAR ROTA NO MAPS</button>
     </div>
+
+    <footer class="main-footer">
+        <div class="footer-grid">
+            <div class="footer-box">
+                <h3>Quem Somos</h3>
+                <p>Especialistas em mapear a melhor gastronomia de raiz de Belo Horizonte. Nosso mapa é atualizado para
+                    garantir que você chegue ao petisco perfeito.</p>
+            </div>
+            <div class="footer-box">
+                <h3>Divulgue seu Bar</h3>
+                <p>Quer destacar seu estabelecimento no mapa? Entre em contato para parcerias.</p>
+                <a href="https://wa.me/5531988578353" class="whatsapp-btn">Falar no WhatsApp</a>
+            </div>
+
+            <div class="footer-box footer-logo-container">
+                <img src="Rota-Logo4.png" alt="Logo Rota Bar" class="footer-logo">
+            </div>
+        </div>
+        <div class="copyright">
+            <p>© 2026 Rota Bar BH | Desenvolvido para amantes de boteco.</p>
+        </div>
+    </footer>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -199,7 +365,7 @@
             { nome: "Kobes Emporium Bar", prato: "Prosa Verde e Rosa", end: "Rua Professor Raimundo Nonato, 31 A – Santa Tereza", lat: -19.910139, lng: -43.916087 },
             { nome: "Koqueiros Bar", prato: "Kostelinha Tropical", end: "Avenida Silviano Brandão, 1293 – Sagrada Família", lat: -19.910909, lng: -43.925451 },
             { nome: "Leo da Quadra", prato: "Di Juei", end: "Rua Oliveira Lisboa, 107 – Barreiro", lat: -19.976210215034726, lng: -44.013184460918694 },
-            { nome: "Locomotivas Bar", prato: "Porkin do Popeye", end: "Rua Carmésia, 568 – Santa Inês", lat: -19.886507870508417, lng: -43.90825814238796 },            
+            { nome: "Locomotivas Bar", prato: "Porkin do Popeye", end: "Rua Carmésia, 568 – Santa Inês", lat: -19.886507870508417, lng: -43.90825814238796 },
             { nome: "Magnifico Quintal", prato: "Costela na sombra da couve", end: "Avenida Serrana, 635 - Serrano", lat: -19.879904, lng: -44.011798 },
             { nome: "Mulão", prato: "Botox Mineiro", end: "Rua Marambaia, 297 - Caiçara", lat: -19.908020, lng: -43.968459 },
             { nome: "Mamute Bar", prato: "Prova procê vê, criatura", end: "Rua Brás Cubas, 116 – Cruzeiro", lat: -19.944702630670786, lng: -43.92848948975501 },
@@ -240,25 +406,23 @@
             // ... (restante dos bares anteriores)
             { nome: "Zé Bolacha ", prato: " Menu de Minas ", end: "Rua das Melancias, 35 – Vila Clóris", lat: -19.821518, lng: -43.952151 },
             { nome: "Zoo Bar ", prato: " Porcoró ", end: "Avenida Otaviano Negrão de Lima, 7844 – Pampulha", lat: -19.85319059828837, lng: -44.004184973496 }
-];
+        ];
 
-        // Inicializa o mapa
         const map = L.map('map', { zoomControl: false }).setView([-19.9322, -43.9378], 13);
-
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
         const rotaIcon = L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
-            iconSize: [35, 35],
-            iconAnchor: [17, 35]
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
         });
 
         const markers = {};
         let enderecoDestino = "";
 
-        // Adiciona os marcadores
         baresBH.forEach((bar, index) => {
             if (bar.lat && bar.lng) {
                 const marker = L.marker([bar.lat, bar.lng], { icon: rotaIcon }).addTo(map);
@@ -308,10 +472,8 @@
 
         function fecharBox() { document.getElementById("infobox").style.display = "none"; }
         function fecharBusca() { resultsList.style.display = 'none'; }
-
         function abrirGPS() {
             if (enderecoDestino) {
-                // LINK CORRIGIDO AQUI:
                 window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(enderecoDestino), '_blank');
             }
         }
