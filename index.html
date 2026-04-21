@@ -39,17 +39,12 @@
     <script>
         // Lista corrigida (Exemplo com correções de sintaxe)
         const baresBH = [
-            { nome: "222", prato: "Buraquim quente", end: "Rua Francisco Deslandes, 222, Cruzeiro", lat: -19.94542429341635, -43.929774443958294 },
-            { nome: "Alexandre's Bar", prato: "Amostarda", end: "Rua David Alves do Vale, 68, Santa Rosa", lat: -19.861666596997818, -43.94440119160479 },
-            { nome: "Andrade's Beer", prato: "Ossadinha Atolada", end: "Rua Dona Geni, 32, Maria Helena", lat: -19.800379577689707, -43.99656051541574 },
-            { nome: "Armazém Santa Amélia ", prato: "Chucrute de Mineiro", end: "Rua da Sinfonia, 253, Santa Amélia", lat: -19.832577239431608, -43.973266705100116 },
-            //{ nome: "Bar da Lora", prato: "Pé de Porco no Mercado", end: "Mercado Central, Centro", lat: -19.922834, lng: -43.943146 },
-            //{ nome: "Bar do Jão", prato: "Na boca do boi", end: "Rua São João Evangelista, 150, São Pedro", lat: -19.947569, lng: -43.936936 },
-            //{ nome: "O Fino do Alho", prato: "Osôbuco di suã", end: "Rua Capitão Sergio Pires, 41", lat: -19.806638, lng: -43.956292 },
-            { nome: "Seu Justino", prato: "Rolê do Justino", end: "Rua Dona Conceição Martins, 63", lat: -19.80222177980087, -43.99748534848829 }
-            // Adicione os outros seguindo este padrão: lat: NUMERO, lng: NUMERO
-        ];
-
+    { nome: "222", prato: "Buraquim quente", end: "Rua Francisco Deslandes, 222, Cruzeiro", lat: -19.945424, lng: -43.929774 },
+    { nome: "Alexandre's Bar", prato: "Amostarda", end: "Rua David Alves do Vale, 68, Santa Rosa", lat: -19.861666, lng: -43.944401 },
+    { nome: "Andrade's Beer", prato: "Ossadinha Atolada", end: "Rua Dona Geni, 32, Maria Helena", lat: -19.800379, lng: -43.996560 },
+    { nome: "Armazém Santa Amélia ", prato: "Chucrute de Mineiro", end: "Rua da Sinfonia, 253, Santa Amélia", lat: -19.832577, lng: -43.973266 },
+    { nome: "Seu Justino", prato: "Rolê do Justino", end: "Rua Dona Conceição Martins, 63", lat: -19.802221, lng: -43.997485 }
+];
         const map = L.map('map', { zoomControl: false }).setView([-19.9322, -43.9378], 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
