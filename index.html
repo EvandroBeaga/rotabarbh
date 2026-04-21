@@ -1,23 +1,108 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rota Bar BH 2026</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; background: #f0f0f0; }
-        #map { height: 100vh; width: 100vw; }
-        #search-container { position: fixed; top: 10px; left: 10px; right: 10px; z-index: 3000; max-width: 500px; margin: auto; }
-        #search-input { width: 100%; padding: 15px 20px; border-radius: 30px; border: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); font-size: 16px; outline: none; box-sizing: border-box; }
-        #results-list { background: white; border-radius: 15px; margin-top: 5px; max-height: 250px; overflow-y: auto; display: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); padding: 0; list-style: none; }
-        #results-list li { padding: 12px 20px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; }
-        #results-list li:hover { background: #f9f9f9; }
-        #infobox { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 25px; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.3); display: none; z-index: 2000; }
-        .btn-rota { background: #e72929; color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
-        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 30px; cursor: pointer; color: #ccc; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        #map {
+            height: 100vh;
+            width: 100vw;
+            z-index: 1;
+        }
+
+        #search-container {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            z-index: 3000;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 30px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            font-size: 16px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        #results-list {
+            background: white;
+            border-radius: 15px;
+            margin-top: 5px;
+            max-height: 250px;
+            overflow-y: auto;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            padding: 0;
+            list-style: none;
+        }
+
+        #results-list li {
+            padding: 12px 20px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+        }
+
+        #results-list li:hover {
+            background: #f9f9f9;
+        }
+
+        #infobox {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 25px;
+            border-radius: 25px 25px 0 0;
+            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 2000;
+        }
+
+        .btn-rota {
+            background: #e72929;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 30px;
+            cursor: pointer;
+            color: #ccc;
+        }
     </style>
 </head>
+
 <body>
 
     <div id="search-container">
@@ -29,27 +114,125 @@
 
     <div id="infobox">
         <span class="close-btn" onclick="fecharBox()">×</span>
-        <h2 id="bar-nome"></h2>
+        <h2 id="bar-nome" style="margin: 0; font-size: 20px;"></h2>
         <p id="bar-prato" style="color: #e72929; font-weight: bold; margin: 8px 0;"></p>
-        <p id="bar-end" style="font-size: 14px; color: #666; line-height: 1.4;"></p>
+        <p id="bar-end" style="font-size: 14px; color: #666; line-height: 1.4; margin-bottom: 10px;"></p>
         <button class="btn-rota" onclick="abrirGPS()">TRAÇAR ROTA NO MAPS</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Lista corrigida (Exemplo com correções de sintaxe)
         const baresBH = [
-    { nome: "222", prato: "Buraquim quente", end: "Rua Francisco Deslandes, 222, Cruzeiro", lat: -19.945424, lng: -43.929774 },
-    { nome: "Alexandre's Bar", prato: "Amostarda", end: "Rua David Alves do Vale, 68, Santa Rosa", lat: -19.861666, lng: -43.944401 },
-    { nome: "Andrade's Beer", prato: "Ossadinha Atolada", end: "Rua Dona Geni, 32, Maria Helena", lat: -19.800379, lng: -43.996560 },
-    { nome: "Armazém Santa Amélia ", prato: "Chucrute de Mineiro", end: "Rua da Sinfonia, 253, Santa Amélia", lat: -19.832577, lng: -43.973266 },
-    { nome: "Seu Justino", prato: "Rolê do Justino", end: "Rua Dona Conceição Martins, 63", lat: -19.802221, lng: -43.997485 }
-];
+            { nome: "222", prato: "Buraquim quente", end: "Rua Francisco Deslandes, 222, Cruzeiro", lat: -19.945424, lng: -43.929774 },
+            { nome: "Alexandre's Bar", prato: "Amostarda", end: "Rua David Alves do Vale, 68, Santa Rosa", lat: -19.861666, lng: -43.944401 },
+            { nome: "Andrade's Beer", prato: "Ossadinha Atolada", end: "Rua Dona Geni, 32, Maria Helena", lat: -19.800379, lng: -43.996560 },
+            { nome: "Armazém Santa Amélia ", prato: "Chucrute de Mineiro", end: "Rua da Sinfonia, 253, Santa Amélia", lat: -19.832577, lng: -43.973266 },
+            { nome: "Baiúca", prato: "Patel pega no Poró", end: "Rua Piauí, 1884 - Funcionários", lat: -19.937791, lng: -43.928749 },
+            { nome: "Bar Bambú", prato: "Tô com ragu na mão", end: "Rua Divisa Nova, 670 – Salgado Filho", lat: -19.945252, lng: -43.981914 },
+            { nome: "Bar Bendita Baderna", prato: "Bendita porpeta", end: "Rua Silva Fortes, 47 - União", lat: -19.879121, lng: -43.927832 },
+            { nome: "Bar Couve-Flor", prato: "À Cervejeira", end: "Avenida Francisco Sá, 280 - Prado", lat: -19.924569, lng: -43.959521 },
+            { nome: "Bar da Cintia", prato: "Chuleta Descontraída", end: "Rua Pastor Rui Franco, 257 – São João Batista", lat: -19.816482, lng: -43.969627 },
+            { nome: "Bar da Fia", prato: "Boca quente, Coração Mole", end: "Rua dos Astecas 2722 – Santa Mônica", lat: -19.827695, lng: -43.980067 },
+            { nome: "Bar da Praça", prato: "Cadin de Nós", end: "Rua Oeste, 517 - Calafate", lat: -19.923254, lng: -43.968186 },
+            { nome: "Bar da Silvania", prato: "Tesouro caipira com encanto da hora", end: "Rua Soares Nogueira, 801, Camargos", lat: -19.941577, lng: -44.017909 },
+            { nome: "Bar do Bartolomeu", prato: "Trio Mineiro Bão de Mais", end: "Rua Arthur Luchesi, 356, Santa Helena", lat: -19.984472, lng: -44.011524 },
+            { nome: "Bar do Bem", prato: "Brasileirinho Raiz", end: "Rua Vicentina Coutinho Camargos, 100, Álvaro Camargos", lat: -19.914691, lng: -44.004909 },
+            { nome: "Bar do Dedinho", prato: "Kaftei Vossa Vontade", end: "Avenida Guarapari, 872 – Santa Amélia", lat: -19.838140, lng: -43.976893 },
+            { nome: "Bar do Jão", prato: "Na boca do boi", end: "Rua São João Evangelista, 150, São Pedro", lat: -19.947569, lng: -43.936936 },
+            { nome: "Bar do Kim", prato: "Fraldinha Suprema", end: "Rua Julio de Castilho, 1071, Palmeiras", lat: -19.964403, lng: -43.980629 },
+            { nome: "Bar do Peixinho", prato: "Tilápia Roleteira", end: "Avenida Bernardo de Vasconcelos, 1824 - Cachoeirinha", lat: -19.880554, lng: -43.935615 },
+            { nome: "Bar do Primo", prato: "Maça de Peito a Moda do Primo", end: "Rua Gávea 422 – Jardim America", lat: -19.939599, lng: -43.977613 },
+            { nome: "Bar do Tião", prato: "Tião Veio", end: "Avenida Dr. Cristiano Guimarães, 2570 - Planalto", lat: -19.841380, lng: -43.949535 },
+            { nome: "Bar dos Meninos", prato: "A Copa e Nossa", end: "Rua Lindolfo Deodoro, 503 – Salgado Filho", lat: -19.939382, lng: -43.978721 },
+            { nome: "Bar e Restaurante do Branco", prato: "Bem Casados", end: "Rua Pitangui, 3197 – Sagrada Família", lat: -19.907451, lng: -43.918189 },
+            { nome: "Bar e Stella", prato: "Porco à Mineira", end: "Avenida Saramenha, 1599 - Guarani", lat: -19.843807, lng: -43.917441 },
+            { nome: "Bar Mania Mineira", prato: "Joelho do Vovô Pig", end: "Rua Paracatu, 1099, Santo Agostinho", lat: -19.927305, lng: -43.953224 },
+            { nome: "Bar Pompéu", prato: "Porquinho Melado", end: "Rua São Miguel, 779 - Itapoã", lat: -19.842320, lng: -43.958276 },
+            { nome: "Bar Restaurante Bom Sabor", prato: "Sabores da Roça", end: "Rua Java, 386 – Noca Suíça", lat: -19.932811, lng: -43.977274 },
+            { nome: "Bar Temático", prato: "O Segredo da Força do Lampião", end: "Rua Pirite, 187 – Santa Tereza", lat: -19.911471, lng: -43.911172 },
+            { nome: "Barzim dos Amigos", prato: "Pé na Roça", end: "Rua Lindolfo de Azevedo, 1263 – Jardim America", lat: -19.943279, lng: -43.973793 },
+            { nome: "Beer", prato: "Talento Mineiro", end: "Rua Romualdo Lopes Cançado, 399 - Castelo", lat: -19.888493, lng: -43.996951 },
+            { nome: "Boteco 86", prato: "Trem de Minas", end: "Rua Jacarina, 86 – Padre Eustáquio", lat: -19.913183, lng: -43.972077 },
+            { nome: "Botequim Buritis", prato: "Butequeiro 25", end: "Rua Henrique Badaró Portugal, 157, Buritis", lat: -19.974861, lng: -43.976595 },
+            { nome: "Buteco do Lili", prato: "Sabores de Vó Maria", end: "Rua Líbero Badarò, 493 – Dona Clara", lat: -19.860925, lng: -43.946053 },
+            { nome: "Buteco Tô D’Boa", prato: "Escondidão Tô D’Boa", end: "Avenida Virgílio de Melo Franco, 400 – Jardim Atlântico", lat: -19.844181, lng: -43.982113 },
+            { nome: "Buteco’s Bar", prato: "Nuhhh!!!", end: "Rua Ernesto Braga, 2 – Jardim Atlântico", lat: -19.847602, lng: -43.982220 },
+            { nome: "Butiquim 325", prato: "Quituti Árabe", end: "Avenida Francisco Sá, 325 - Prado", lat: -19.925291, lng: -43.959226 },
+            { nome: "Camisola Bar", prato: "Franco Raiz", end: "Rua Luther King, 242 – Cidade Nova", lat: -19.891383, lng: -43.924730 },
+            { nome: "Cantina Arte Quintal", prato: "Porco Atolado na Lama", end: "Rua Realengo, 150 - Caiçara", lat: -19.900941, lng: -43.975743 },
+            { nome: "Cantinho da Baiana", prato: "Espírito de Porco", end: "Rua Ernesto Itaité, 422 – São Geraldo", lat: -19.898209, lng: -43.899899 },
+            { nome: "Casa da Madrinha", prato: "Tesouro Escondido", end: "Avenida Barbacena, 212, Barro Preto", lat: -19.920366, lng: -43.955428 },
+            { nome: "Casa Mojubá", prato: "Sabor Ancestral", end: "Rua Mármore, 817 – Santa Tereza", lat: -19.916771, lng: -43.914745 },
+            { nome: "Chapa Mágica", prato: "O Giro Du io-Poró", end: "Avenida Waldomiro Lobo, 305 - Guarani", lat: -19.845230, lng: -43.921661 },
+            { nome: "Chop da Esquina", prato: "O Sabor na Lata", end: "Rua Farret, 263 – Noca Granada", lat: -19.942426, lng: -43.965770 },
+            { nome: "Choperia América Norte Sul", prato: "Fundue de Buteco", end: "Rua Chico Rei, 190, Estrela do Oriente", lat: -19.961899, lng: -43.985190 },
+            { nome: "Cipoeiro Bar", prato: "Lingüiça Estourada Cipoeira", end: "Rua Desembargador José Satyro, 451 - Castelo", lat: -19.888623, lng: -43.995754 },
+            { nome: "Companhia do Dino", prato: "Pescoço do Dino", end: "Avenida Joaquim Clemente, 682 - Floramar", lat: -19.836972, lng: -43.933308 },
+            { nome: "Cosmos", prato: "Firmamento", end: "Avenida Vicente Risola, 1305 – Santa Inés", lat: -19.880311, lng: -43.910128 },
+            { nome: "Deck Boi na Brasa", prato: "Glu Glu à Baiana", end: "Rua Desembargador José Satyro, 302 - Manacás", lat: -19.887424, lng: -43.996436 },
+            { nome: "Dona ju Gastro Bar", prato: "Coisa de Vó", end: "Rua dos Borges, 1520 – Jardim Vitória", lat: -19.844559, lng: -43.880190 },
+            { nome: "Dona Suica", prato: "Poró de Gala", end: "Avenida João Samaha, 390 – São João Batista", lat: -19.826520, lng: -43.962677 },
+            { nome: "Empório Laís", prato: "Sonho de Salsa", end: "Rua Olavo Andrade, 195 - Cachoeirinha", lat: -19.889781, lng: -43.944972 },
+            { nome: "Espetinho do Boi", prato: "Ora pro Boi", end: "Rua São Paulo da Cruz, 357 - Barreiro", lat: -19.981177, lng: -44.014578 },
+            { nome: "Espetinho do Tilias", prato: "Vaca Louca na Horta", end: "Praça Manoel Batista Baía, 235 - Mantiqueira", lat: -19.799650, lng: -43.983461 },
+            { nome: "Espetinho Rei e Família", prato: "Musconóbios", end: "Rua Cristina, 870 – São Paulo", lat: -19.917000, lng: -43.900000 },
+            { nome: "Espetinho.com", prato: "Moela da tia", end: "Rua Eli Seabra Filho, 510, Buritis", lat: -19.975536, lng: -43.976684 },
+            { nome: "Galpão Flor do Campo", prato: "Espinafrou a Trouxinha", end: "Rua Coronel Otávio Diniz, 449 – Santa Efigênia", lat: -19.917798, lng: -43.907102 },
+            { nome: "Garagge Vintage", prato: "Sereia do Bar", end: "Avenida Dr. Cristiano Guimarães, 1258 - Planalto", lat: -19.831394, lng: -43.954959 },
+            { nome: "Geraldin da Cida", prato: "Costelinha do Papai", end: "Rua Contria, 1459 - Grajaú", lat: -19.937983, lng: -43.967564 },
+            { nome: "Golden Grill", prato: "Coxa Supreme ao lho-Poró", end: "Rua Amílcar Cabral, 515 - Milionários", lat: -19.985226, lng: -44.002598 },
+            { nome: "Graffica Bar", prato: "Bolim com Nóbis", end: "Avenida Augusto de Lima, 233 - Centro", lat: -19.924859, lng: -43.938230 },
+            { nome: "Ivo Grill", prato: "IVOquei o Porco", end: "Rua Professor Tristão da Cunha, 183 - Planalto", lat: -19.837295, lng: -43.947483 },
+            { nome: "Já Tó Inno", prato: "Trem de Minas", end: "Rua Benjamim Dias, 3379 - Barreiro", lat: -19.977770, lng: -44.015442 },
+            { nome: "Juzé Bar", prato: "Fumaça e Farofa", end: "Rua Carlos Sá, 180 – Jardim Atlântico", lat: -19.842890, lng: -43.986691 },
+            { nome: "Kobes Emporium Bar", prato: "Prosa Verde e Rosa", end: "Rua Professor Raimundo Nonato, 31 A – Santa Tereza", lat: -19.910139, lng: -43.916087 },
+            { nome: "Koqueiros Bar", prato: "Kostelinha Tropical", end: "Avenida Silviano Brandão, 1293 – Sagrada Família", lat: -19.910909, lng: -43.925451 },
+            { nome: "Magnifico Quintal", prato: "Costela na sombra da couve", end: "Avenida Serrana, 635 - Serrano", lat: -19.879904, lng: -44.011798 },
+            { nome: "Mulão", prato: "Botox Mineiro", end: "Rua Marambaia, 297 - Caiçara", lat: -19.908020, lng: -43.968459 },
+            { nome: "Nosso Spetim", prato: "Minas no Prato", end: "Rua dos Astecas, 3219 – Santa Mônica ", lat: -19.831434, lng: -43.977221 },
+            { nome: "NuBar", prato: "Trem Bão de Panela", end: "Avenida dos Engenheiros, 843 – Alípio de Melo", lat: -19.889267, lng: -44.001922 },
+            { nome: "O Fino do Alho", prato: "Osôbuco di suã", end: "Rua Capitão Sergio Pires, 41 – Minas Caixa", lat: -19.806638, lng: -43.956292 },
+            { nome: "Oratório Bar ", prato: " Lambuzado ", end: "Avenida Brasil, 161 – Santa Efigenia", lat: -19.924193, lng: -43.921705 },
+            { nome: "Parada 10.95 Bar ", prato: " Locro por Minas ", end: "Avenida dos Engenheiros, 1095 – Alípio de Melo", lat: -19.888357, lng: -44.002865 },
+            { nome: "Pé de Goiaba ", prato: " Atolacoxa ", end: "Avenida Amazonas, 4676 – Nova Suiça", lat: -19.928947, lng: -43.975749 },
+            { nome: "Planeta Lúpulo ", prato: " Catifunda ", end: "Avenida Guarapari, 108 – Santa Amélia", lat: -19.844306, lng: -43.977129 },
+            { nome: "PoiZé Bar", prato: "Porco escaldado Popeye", end: "Rua Pium-I, 686, Anchieta", lat: -19.945427, lng: -43.930959 },
+            { nome: "Prado Beer ", prato: " Músculo do Popeye ", end: "Avenida Francisco Sá, 590 - Prado", lat: -19.926785, lng: -43.959802 },
+            { nome: "Queremos Frango ", prato: " Sô Forte Uai", end: "Avenida Joaquim Clemente, 730 - Floramar", lat: -19.836577, lng: -43.933394 },
+            { nome: "Quintal do Louzada ", prato: " Charuteco Caipira ", end: "Rua Gávea, 358 – Nova Suíça", lat: -19.939313, lng: -43.976975 },
+            { nome: "Quioxque Botequim Carioca ", prato: " Sou Marinheiro Popeye ", end: "Rua Henrique Badaró Portugal, 157 - Buritis", lat: -19.974942, lng: -43.976584 },
+            { nome: "Quintas da Tia Nice Bar ", prato: " Tô Ki ", end: "Rua Alabastro, 146 - Horto", lat: -19.910956, lng: -43.920777 },
+            { nome: "Recanto da Traíra ", prato: " Traíra não Traí ", end: "Rua Alberto Cintra, 47 - União", lat: -19.879357, lng: -43.928579 },
+            { nome: "Reforma Bar ", prato: " Maria das Trouxas ", end: "Rua Joaquim Nabuco, 577 – Nova Suíça", lat: -19.935904, lng: -43.976975 },
+            { nome: "Rei da Picanha ", prato: " De Picanha com a vida ", end: "Avenida Sebastião de Brito, 400 – Dona Clara", lat: -19.861351, lng: -43.943797 },
+            { nome: "Rei do Peixe ", prato: " Polpetta do Rei ", end: "Rua Ramalho Ortigão, 735 – Santa Branca", lat: -19.832319, lng: -43.966487 },
+            { nome: "Resenha da Naty ", prato: " Pode comer que não e pecado ", end: "Rua Gonçalves Lêdo, 288 - Cachoeirinha", lat: -19.892148, lng: -43.946117 },
+            { nome: "S.O.S Pub ", prato: " Boi Enrolado", end: "Avenida Padre José Maurício, 1126 - Vista Alegre", lat: -19.955543, lng: -43.998000 },
+            { nome: "Sant’Esquina Butiquim ", prato: " Atoladinho de Boi bebum ", end: "Rua Ramalho Ortigão, 650 – Santa Branca", lat: -19.832861, lng: -43.966489 },
+            { nome: "Santa Boemia ", prato: " Mama Mia!", end: "Rua Mármore, 534 – Santa Tereza", lat: -19.916395, lng: -43.917521 },
+            { nome: "Santuário Retrô ", prato: " Du Gibí ", end: "Avenida Padre Vieira, 150 – Minas Brasil", lat: -19.915626, lng: -43.989739 },
+            { nome: "Seu Justino ", prato: " Rolê do Justino ", end: "Rua Dona Conceição Martins, 63 – Maria Helena", lat: -19.802216, lng: -43.997517 },
+            { nome: "Sô Bar", prato: "Rolê do Justino", end: "Av. Altamiro Avelino Soares, 426, Castelo", lat: -19.882712, lng: -43.997929 },
+            { nome: "Spetim ", prato: " Dona Farofa e Sr. Porquinho ", end: "Rua Ilacir Pereira Lima, 518 - Silveira", lat: -19.889674, lng: -43.929845 },
+            { nome: "Sunset Bar", prato: " Costela Véia de Guerra ", end: "Avenida Érico Veríssimo, 2039 – Santa Mônica", lat: -19.820503, lng: -43.977971 },
+            { nome: "Tanganica Art Bar ", prato: " Trio Vegano ", end: "Rua Padre Dermeval Gomes, 380 – Coração Eucarístico", lat: -19.925110, lng: -43.991630 },
+            { nome: "Toca do Ogro ", prato: " Trio da Roça ", end: "Rua Professor Nelson de Sena, 4 - Pampulha", lat: -19.853247, lng: -43.955974 },
+            { nome: "Toninho Alto Forno ", prato: " Pé no Rabo ", end: "Rua Miracema, 100 – Santo André", lat: -19.899720, lng: -43.952243 },
+            { nome: "Us Motoca ", prato: " Risoto Mineiro ", end: "Rua Blenda, 91 - Camargos", lat: -19.940132, lng: -44.014211 },
+            { nome: "Via Deslandes ", prato: " Di Joelho ", end: "Rua Francisco Deslandes, 10 - Anchieta", lat: -19.944043, lng: -43.930202 },
+            { nome: "Xambar ", prato: " Esconde-Esconde ", end: "Avenida Augusto de Lima, 233 - Centro", lat: -19.924838, lng: -43.938187 },
+            { nome: "Zé Bolacha ", prato: " Menu de Minas ", end: "Rua das Melancias, 35 – Vila Clóris", lat: -19.821518, lng: -43.952151 }
+        ];
+
+        // Inicializa o mapa
         const map = L.map('map', { zoomControl: false }).setView([-19.9322, -43.9378], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
         const rotaIcon = L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', // Substitua pela sua Rota-Logo4.png
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
             iconSize: [35, 35],
             iconAnchor: [17, 35]
         });
@@ -57,6 +240,7 @@
         const markers = {};
         let enderecoDestino = "";
 
+        // Adiciona os marcadores
         baresBH.forEach((bar, index) => {
             if (bar.lat && bar.lng) {
                 const marker = L.marker([bar.lat, bar.lng], { icon: rotaIcon }).addTo(map);
@@ -83,7 +267,7 @@
             resultsList.innerHTML = '';
             if (term.length < 2) { resultsList.style.display = 'none'; return; }
 
-            const filtered = baresBH.filter(bar => 
+            const filtered = baresBH.filter(bar =>
                 bar.nome.toLowerCase().includes(term) || bar.end.toLowerCase().includes(term)
             );
 
@@ -95,6 +279,7 @@
                     li.onclick = () => {
                         const originalIndex = baresBH.indexOf(bar);
                         exibirBar(bar, markers[originalIndex]);
+                        searchInput.value = bar.nome;
                     };
                     resultsList.appendChild(li);
                 });
@@ -105,9 +290,10 @@
 
         function fecharBox() { document.getElementById("infobox").style.display = "none"; }
         function fecharBusca() { resultsList.style.display = 'none'; }
-        
+
         function abrirGPS() {
             if (enderecoDestino) {
+                // LINK CORRIGIDO AQUI:
                 window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(enderecoDestino), '_blank');
             }
         }
@@ -115,4 +301,5 @@
         map.on('click', () => { fecharBox(); fecharBusca(); });
     </script>
 </body>
+
 </html>
